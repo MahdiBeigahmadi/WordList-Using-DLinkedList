@@ -1,4 +1,3 @@
-# WordList-Using-DLinkedList
 ## Assignment 1: Word Lists
 
 Your task is to create a class called `Wordlist` that stores words without any
