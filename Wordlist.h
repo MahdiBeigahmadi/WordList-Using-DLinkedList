@@ -34,7 +34,6 @@
 #include <fstream>
 #include <algorithm>
 #include <iostream>
-#include <sstream>
 #include <string>
 
 using namespace std;
@@ -107,24 +106,39 @@ Wordlist::Wordlist(const Wordlist& other) {
        }
 }
 
+// Source: chatGPT, my code did not read the first line of the txt file it skipped to the next line, I could fix it by one STL which is called #inlclude <sstream>. but Toby did not accept from me to add this header into the code
 Wordlist::Wordlist(const string& filename) {
-    ifstream inFile(filename);
-       if (!inFile) {
-        cout << "Error loading the file \a" << filename << endl;
+    ifstream file(filename);
+    if (!file) {
+        cout << "Error loading the file " << filename << endl;
         return;
     }
-    
+
     string line;
-    while (getline(inFile, line)) {
-        istringstream lineStream(line);
-        string word;
-        while (lineStream >> word) {
-            add_word(word);
+    while (getline(file, line)) {
+        size_t start = 0;
+        size_t end = line.find(' ');
+
+        while (end != string::npos) {
+            string word = line.substr(start, end - start);
+            if (!word.empty()) {
+                add_word(word);
+            }
+
+            start = end + 1;
+            end = line.find(' ', start);
+        }
+
+        
+        string lastWord = line.substr(start);
+        if (!lastWord.empty()) {
+            add_word(lastWord);
         }
     }
-    
-    inFile.close();
+
+    file.close();
 }
+
 
 Wordlist::~Wordlist() {
 Node* current = headDLinkedList;
@@ -142,7 +156,10 @@ bool Wordlist::is_frozen() const {
 }
 
 void Wordlist::add_word(const string &w) { //inspired from textbook (Data Structures & Algorithms. Mount, Goodrich and Tamassia)
- if (!is_frozen()) {
+if (is_frozen()) {
+    throw runtime_error("The list is frozen");
+}
+ else if (!is_frozen()) {
         Node* temp = new Node;
         temp->word = w;
         temp->next = nullptr;
@@ -177,6 +194,7 @@ int Wordlist::length() const {
 }
 
 bool Wordlist::contains(const string &w) const {
+    
     Node* current = headDLinkedList;
     while (current != nullptr) {
         if (current->word == w) {
@@ -184,12 +202,16 @@ bool Wordlist::contains(const string &w) const {
         }
         current = current->next;
     }
-    return false;
+    
+ return false;
 }
 
    
 void Wordlist::remove_word(const string &w) { //inspired from geeksforgeeks website, https://www.geeksforgeeks.org/remove-duplicates-unsorted-doubly-linked-list/
-  if (!is_frozen()) {
+  if (is_frozen()) {
+    throw runtime_error("The list is frozen\a");
+  }
+  else if (!is_frozen()) {
     Node* temp = headDLinkedList;
         while (temp) {
             if (temp->word == w) {
@@ -224,10 +246,14 @@ string Wordlist::get_word(int index) const {
         throw out_of_range("Index out of bounds");
     }
 
-    unsigned int helperIndex = 0;
+    unsigned int helperIndex = 1;
     Node* current = headDLinkedList;
     while (current != nullptr) {
-        if (index == helperIndex) {
+        if (index == 0) {
+            return current->word;
+            break;
+        }
+        else if (index == helperIndex ) {
             return current->word;
         }
         helperIndex++;
@@ -237,7 +263,7 @@ string Wordlist::get_word(int index) const {
     throw runtime_error("Unexpected error");
 }
   
-vector<string *> Wordlist::get_sorted_index() {
+vector<string*> Wordlist::get_sorted_index() {
       freezeTheList();
 
     bool doneOperation = false;
@@ -257,4 +283,4 @@ vector<string *> Wordlist::get_sorted_index() {
     else { 
         exit(0);
     }
-}   
+}
